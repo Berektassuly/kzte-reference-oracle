@@ -5,8 +5,8 @@ use kzte_oracle::state::{
     FeedAccount as ChainFeedAccount, HaltBehavior as ChainHaltBehavior, OracleConfig as ChainOracleConfig,
 };
 use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_commitment_config::CommitmentConfig;
 use solana_sdk::{
-    commitment_config::CommitmentConfig,
     instruction::Instruction,
     pubkey::Pubkey,
     signature::{read_keypair_file, Keypair, Signature, Signer},

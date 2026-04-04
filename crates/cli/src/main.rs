@@ -6,8 +6,8 @@ use kzte_feeder::{load_config as load_feeder_config, run_once};
 use kzte_feeder::metrics::FeederMetrics;
 use kzte_oracle::state::{FeedAccount, FeedStatus as ChainFeedStatus, HaltBehavior as ChainHaltBehavior, OracleConfig};
 use serde_json::json;
+use solana_commitment_config::CommitmentConfig;
 use solana_sdk::{
-    commitment_config::CommitmentConfig,
     pubkey::Pubkey,
     signature::{read_keypair_file, Keypair as AnchorKeypair, Signature, Signer},
     system_program,
