@@ -38,9 +38,15 @@ fn init_tracing(json_logs: bool) -> anyhow::Result<()> {
     let builder = tracing_subscriber::fmt().with_env_filter(filter);
 
     if json_logs {
-        builder.json().try_init()?;
+        builder
+            .json()
+            .try_init()
+            .map_err(|error| anyhow::anyhow!("failed to initialize JSON tracing: {}", error))?;
     } else {
-        builder.compact().try_init()?;
+        builder
+            .compact()
+            .try_init()
+            .map_err(|error| anyhow::anyhow!("failed to initialize tracing: {}", error))?;
     }
 
     Ok(())

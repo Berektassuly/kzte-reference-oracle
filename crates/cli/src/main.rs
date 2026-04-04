@@ -421,8 +421,13 @@ fn program(config: &CliConfig, payer: AnchorKeypair) -> Result<Program<Rc<Anchor
 
 fn load_keypair(path: impl AsRef<Path>) -> Result<AnchorKeypair> {
     let expanded = expand_tilde(path.as_ref())?;
-    read_keypair_file(&expanded)
-        .with_context(|| format!("failed to read keypair from {}", expanded.display()))
+    read_keypair_file(&expanded).map_err(|error| {
+        anyhow!(
+            "failed to read keypair from {}: {}",
+            expanded.display(),
+            error
+        )
+    })
 }
 
 fn expand_tilde(path: &Path) -> Result<PathBuf> {
