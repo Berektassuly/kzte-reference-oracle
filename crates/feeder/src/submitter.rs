@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use kzte_common::{FeederConfig, HaltBehavior};
 use kzte_oracle::state::{
@@ -27,7 +27,13 @@ impl OracleRpcClient {
     pub fn new(config: &FeederConfig) -> Result<Self> {
         let signer = Arc::new(
             read_keypair_file(&config.rpc.keypair_path)
-                .with_context(|| format!("failed to read keypair at {}", config.rpc.keypair_path))?,
+                .map_err(|error| {
+                    anyhow!(
+                        "failed to read keypair at {}: {}",
+                        config.rpc.keypair_path,
+                        error
+                    )
+                })?,
         );
         let program_id = Pubkey::from_str(&config.rpc.program_id)
             .with_context(|| format!("invalid program id {}", config.rpc.program_id))?;

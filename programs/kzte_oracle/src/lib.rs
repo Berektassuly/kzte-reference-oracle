@@ -10,6 +10,7 @@ use state::{FeedAccount, FeedStatus, HaltBehavior, OracleConfig, PublisherSet};
 
 declare_id!("9FZHqpq5ffv8HLKtWMjVU8WuNTUH44WDYeKr6MEtx7ex");
 
+#[allow(deprecated)]
 #[program]
 pub mod kzte_oracle {
     use super::*;

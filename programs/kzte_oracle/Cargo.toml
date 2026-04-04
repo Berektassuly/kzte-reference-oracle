@@ -9,6 +9,7 @@ crate-type = ["cdylib", "lib"]
 name = "kzte_oracle"
 
 [features]
+anchor-debug = []
 default = []
 cpi = ["no-entrypoint"]
 idl-build = ["anchor-lang/idl-build"]
