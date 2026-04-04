@@ -29,7 +29,7 @@ The system is split into three layers:
 2. **Off-chain feeder/aggregator**
    - Fetches NBK official exchange data.
    - Normalizes all prices to fixed-point `1e8`.
-   - Derives `KZTE/KZT = 1.00000000` and `KZTE/USD = 1 / (USD/KZT)` from official data.
+   - Derives `KZTE/KZT = 1.00000000` and `KZTE/USD = 1 / (USD/KZT)` from official data using nearest-integer reciprocal rounding at `1e8` precision.
    - Optionally fetches market TWAP and computes `peg_deviation_bps`.
    - Applies carry-forward logic when a new official business-day rate is unavailable.
    - Submits `submit_update` transactions with structured logs and a `/metrics` endpoint.
@@ -52,6 +52,9 @@ The oracle-specific tree added in this repo is:
 |-- Dockerfile
 |-- README.md
 |-- .env.example
+|-- docs
+|   |-- github-ci-tests-prompt.md
+|   `-- price-conversions.md
 |-- config
 |   |-- cli.example.toml
 |   `-- feeder.example.toml
@@ -104,6 +107,11 @@ The oracle-specific tree added in this repo is:
 
 Note: existing unrelated `frontend/` and `backend/` directories were left untouched.
 
+## Docs
+
+- [`docs/price-conversions.md`](docs/price-conversions.md) explains fixed-point scale, supported rate conventions, and the reciprocal rounding rule used for `KZTE/USD`.
+- [`docs/github-ci-tests-prompt.md`](docs/github-ci-tests-prompt.md) contains the repository-specific prompt for generating GitHub Actions CI coverage.
+
 ## Feeds
 
 Implemented feed targets:
@@ -111,7 +119,7 @@ Implemented feed targets:
 - `KZTE/KZT`
   - fixed reference price at `1e8`
 - `KZTE/USD`
-  - derived from NBK official `USD/KZT`
+  - derived from the NBK official `USD/KZT` reciprocal and rounded to the nearest integer at `1e8` precision
 - `KZTE/USDC`
   - optional alias feed, disabled by default
 - `peg_deviation_bps`
@@ -123,7 +131,17 @@ Implemented feed targets:
 - Program-side math uses integers only
 - No floating-point math is used on-chain
 - Intermediate multiplication/division uses checked arithmetic
+- Reciprocal conversions round to the nearest integer at `1e8` precision instead of truncating toward zero
+- Half-step reciprocal cases round away from zero to keep signed helper behavior symmetric
 - `expo = -8` is enforced for submitted prices
+
+For the full conversion notes and worked examples, see [`docs/price-conversions.md`](docs/price-conversions.md).
+
+## Conversion Notes
+
+- Official NBK `USD/KZT` quotes are treated numerically as `KztPerUsd`.
+- `KZTE/KZT` is always `1.00000000`, so `KZTE/USD` is the same reciprocal as `USD per KZT`.
+- Example: `470.46 KZT/USD` is stored as `47_046_000_000`, and its reciprocal rounds from `212557.922...` to `212_558` at `1e8` precision.
 
 ## Status Model
 
@@ -325,7 +343,7 @@ See `.env.example`. The important ones are:
 2. Feeder fetches the NBK official page.
 3. Optional open-data source is fetched and included in the median if configured.
 4. Official quotes are normalized to `USD/KZT @ 1e8`.
-5. `KZTE/KZT` and `KZTE/USD` are derived deterministically.
+5. `KZTE/KZT` and `KZTE/USD` are derived deterministically, with the reciprocal path rounded to the nearest integer at `1e8` precision.
 6. Optional market TWAP is fetched and converted into `peg_deviation_bps`.
 7. Confidence is widened according to carry-forward / stale / divergence policy.
 8. Feeder submits `submit_update` transactions.
@@ -370,7 +388,7 @@ Not fully covered:
 Included tests cover:
 
 - fixed-point math
-- `USD/KZT -> KZTE/USD` derivation
+- `USD/KZT -> KZTE/USD` derivation, including reciprocal rounding regression coverage
 - NBK parser fixture
 - carry-forward weekend logic
 - soft/hard stale transitions

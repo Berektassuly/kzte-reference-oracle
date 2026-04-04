@@ -54,7 +54,7 @@ Observed tech stack and commands:
   - `anchor test`
 - README also says the current tests cover:
   - fixed-point math
-  - `USD/KZT -> KZTE/USD` derivation
+  - `USD/KZT -> KZTE/USD` derivation, including reciprocal rounding regression coverage
   - NBK parser fixture
   - carry-forward weekend logic
   - soft/hard stale transitions
