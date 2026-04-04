@@ -9,7 +9,8 @@ use solana_commitment_config::CommitmentConfig;
 use solana_sdk::{
     instruction::Instruction,
     pubkey::Pubkey,
-    signature::{read_keypair_file, Keypair, Signature, Signer},
+    signature::{read_keypair_file, Keypair, Signature},
+    signer::Signer,
     transaction::Transaction,
 };
 use std::str::FromStr;

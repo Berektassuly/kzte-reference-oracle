@@ -9,9 +9,10 @@ use serde_json::json;
 use solana_commitment_config::CommitmentConfig;
 use solana_sdk::{
     pubkey::Pubkey,
-    signature::{read_keypair_file, Keypair as AnchorKeypair, Signature, Signer},
-    system_program,
+    signature::{read_keypair_file, Keypair as AnchorKeypair, Signature},
+    signer::Signer,
 };
+use solana_system_interface::program as system_program;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;

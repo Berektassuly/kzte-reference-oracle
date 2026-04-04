@@ -2,11 +2,12 @@ use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use solana_program_test::{processor, ProgramTest, ProgramTestContext};
 use solana_sdk::{
     instruction::InstructionError,
-    signature::{Keypair, Signer},
-    system_instruction,
+    signature::Keypair,
+    signer::Signer,
     transaction::{Transaction, TransactionError},
     transport::TransportError,
 };
+use solana_system_interface::{instruction as system_instruction, program as system_program};
 
 use kzte_oracle::state::{FeedAccount, PublisherSet};
 
@@ -119,7 +120,7 @@ async fn initialize_config(
             config: config.pubkey(),
             publisher_set,
             admin: context.payer.pubkey(),
-            system_program: solana_sdk::system_program::id(),
+            system_program: system_program::id(),
         }
         .to_account_metas(None),
         data: kzte_oracle::instruction::InitializeOracleConfig {
@@ -171,7 +172,7 @@ async fn create_feed(
             config: config.pubkey(),
             feed,
             admin: context.payer.pubkey(),
-            system_program: solana_sdk::system_program::id(),
+            system_program: system_program::id(),
         }
         .to_account_metas(None),
         data: kzte_oracle::instruction::CreateFeed {
