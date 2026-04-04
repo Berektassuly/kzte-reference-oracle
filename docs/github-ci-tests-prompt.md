@@ -41,8 +41,8 @@ Current repository structure:
 
 Observed tech stack and commands:
 - Root `Cargo.toml` defines a Rust workspace using edition 2021.
-- Rust dependencies include Anchor `0.31.1`, Solana `2.1.11`, Tokio, Reqwest, Axum, and `solana-program-test`.
-- `Anchor.toml` sets `anchor_version = "0.31.1"` and defines:
+- Rust dependencies include Anchor `1.0.0`, Solana `3.x/4.x`, Tokio, Reqwest, Axum, and `solana-program-test`.
+- `Anchor.toml` sets `anchor_version = "1.0.0"` and defines:
   - provider cluster: `Localnet`
   - test script: `cargo test -p integration-tests -- --nocapture`
 - `tests/src/integration.rs` uses `solana-program-test`, which suggests integration tests can run locally without a real external RPC.

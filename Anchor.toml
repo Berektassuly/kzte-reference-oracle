@@ -1,5 +1,5 @@
 [toolchain]
-anchor_version = "0.31.1"
+anchor_version = "1.0.0"
 
 [features]
 resolution = true
@@ -7,9 +7,6 @@ skip-lint = false
 
 [programs.localnet]
 kzte_oracle = "9FZHqpq5ffv8HLKtWMjVU8WuNTUH44WDYeKr6MEtx7ex"
-
-[registry]
-url = "https://api.apr.dev"
 
 [provider]
 cluster = "Localnet"

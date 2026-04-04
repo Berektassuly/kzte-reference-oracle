@@ -1,6 +1,4 @@
-use anchor_client::{
-    solana_sdk::signature::Keypair as AnchorKeypair, Client, Cluster, Program,
-};
+use anchor_client::{Client, Cluster, Program};
 use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use kzte_common::{load_toml_file, CliConfig};
@@ -11,7 +9,7 @@ use serde_json::json;
 use solana_sdk::{
     commitment_config::CommitmentConfig,
     pubkey::Pubkey,
-    signature::{read_keypair_file, Signature, Signer},
+    signature::{read_keypair_file, Keypair as AnchorKeypair, Signature, Signer},
     system_program,
 };
 use std::path::{Path, PathBuf};
