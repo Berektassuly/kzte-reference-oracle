@@ -21,11 +21,28 @@ pub fn checked_mul_div_i64(lhs: i64, rhs: i64, divisor: i64) -> Result<i64, Math
         return Err(MathError::DivisionByZero);
     }
 
-    let value = (lhs as i128)
+    let product = (lhs as i128)
         .checked_mul(rhs as i128)
-        .ok_or(MathError::Overflow)?
-        .checked_div(divisor as i128)
+        .ok_or(MathError::Overflow)?;
+    let divisor = divisor as i128;
+
+    let mut value = product
+        .checked_div(divisor)
         .ok_or(MathError::DivisionByZero)?;
+    let remainder = product % divisor;
+
+    // Keep scaled reciprocal price conversions symmetric at 1e8 precision by
+    // rounding to the nearest integer instead of truncating toward zero.
+    if remainder != 0
+        && remainder
+            .abs()
+            .checked_mul(2)
+            .ok_or(MathError::Overflow)?
+            >= divisor.abs()
+    {
+        let adjustment = if (product >= 0) == (divisor >= 0) { 1 } else { -1 };
+        value = value.checked_add(adjustment).ok_or(MathError::Overflow)?;
+    }
 
     i64::try_from(value).map_err(|_| MathError::Overflow)
 }
@@ -48,8 +65,7 @@ pub fn derive_usd_per_kzt_from_kzt_per_usd(kzt_per_usd: i64) -> Result<i64, Math
 }
 
 pub fn derive_kzte_usd_from_kzt_per_usd(kzt_per_usd: i64) -> Result<i64, MathError> {
-    let usd_per_kzt = derive_usd_per_kzt_from_kzt_per_usd(kzt_per_usd)?;
-    checked_mul_div_i64(PRICE_SCALE, usd_per_kzt, PRICE_SCALE)
+    derive_usd_per_kzt_from_kzt_per_usd(kzt_per_usd)
 }
 
 pub fn calculate_deviation_bps(reference_price: i64, observed_price: i64) -> Result<u32, MathError> {
@@ -104,6 +120,12 @@ mod tests {
         let kzte_usd = derive_kzte_usd_from_kzt_per_usd(kzt_per_usd).unwrap();
 
         assert_eq!(kzte_usd, 212_558);
+    }
+
+    #[test]
+    fn checked_mul_div_rounds_to_nearest_integer() {
+        assert_eq!(checked_mul_div_i64(10, 10, 6).unwrap(), 17);
+        assert_eq!(checked_mul_div_i64(-10, 10, 6).unwrap(), -17);
     }
 
     #[test]
