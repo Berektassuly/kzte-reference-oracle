@@ -1,0 +1,14 @@
+[rpc]
+http_url = "http://127.0.0.1:8899"
+ws_url = "ws://127.0.0.1:8900"
+keypair_path = "~/.config/solana/id.json"
+program_id = "9FZHqpq5ffv8HLKtWMjVU8WuNTUH44WDYeKr6MEtx7ex"
+
+[oracle]
+config_pubkey = "11111111111111111111111111111111"
+publisher_set_pubkey = "11111111111111111111111111111111"
+
+[feeds]
+kzte_kzt = "11111111111111111111111111111111"
+kzte_usd = "11111111111111111111111111111111"
+kzte_usdc = ""

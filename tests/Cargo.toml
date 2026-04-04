@@ -1,0 +1,16 @@
+[package]
+name = "integration-tests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anchor-lang.workspace = true
+anyhow.workspace = true
+kzte-common = { path = "../crates/common" }
+kzte-feeder = { path = "../crates/feeder" }
+kzte_oracle = { path = "../programs/kzte_oracle", features = ["no-entrypoint"] }
+serde_json.workspace = true
+solana-program-test.workspace = true
+solana-sdk.workspace = true
+tokio.workspace = true

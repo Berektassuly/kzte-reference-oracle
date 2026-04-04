@@ -1,0 +1,56 @@
+[workspace]
+members = [
+    "crates/common",
+    "crates/feeder",
+    "crates/cli",
+    "programs/kzte_oracle",
+    "tests",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://example.com/kzte-reference-oracle"
+version = "0.1.0"
+
+[workspace.dependencies]
+anchor-client = "0.31.1"
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
+anyhow = "1.0.95"
+async-trait = "0.1.86"
+axum = "0.7.9"
+bs58 = "0.5.1"
+chrono = { version = "0.4.39", features = ["clock", "serde"] }
+clap = { version = "4.5.27", features = ["derive", "env"] }
+futures = "0.3.31"
+hex = "0.4.3"
+metrics = "0.23.0"
+metrics-exporter-prometheus = { version = "0.15.3", default-features = false, features = ["http-listener"] }
+regex = "1.11.1"
+reqwest = { version = "0.12.12", default-features = false, features = ["json", "rustls-tls"] }
+rust_decimal = { version = "1.36.0", features = ["serde"] }
+scraper = "0.22.0"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
+sha2 = "0.10.8"
+solana-client = "2.1.11"
+solana-program-test = "2.1.11"
+solana-sdk = "2.1.11"
+thiserror = "1.0.69"
+tokio = { version = "1.43.0", features = ["full"] }
+tokio-stream = "0.1.17"
+toml = "0.8.19"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt", "json"] }
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+overflow-checks = true
+
+[profile.release.build-override]
+codegen-units = 1
+incremental = false
+opt-level = 3

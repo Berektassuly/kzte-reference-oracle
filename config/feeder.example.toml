@@ -1,0 +1,48 @@
+[rpc]
+http_url = "http://127.0.0.1:8899"
+ws_url = "ws://127.0.0.1:8900"
+keypair_path = "~/.config/solana/id.json"
+program_id = "9FZHqpq5ffv8HLKtWMjVU8WuNTUH44WDYeKr6MEtx7ex"
+
+[oracle]
+config_pubkey = "11111111111111111111111111111111"
+publisher_set_pubkey = "11111111111111111111111111111111"
+feed_kzte_kzt = "11111111111111111111111111111111"
+feed_kzte_usd = "11111111111111111111111111111111"
+feed_kzte_usdc = ""
+
+[source.official_page]
+enabled = true
+url = "https://nationalbank.kz/en/exchangerates/ezhednevnye-oficialnye-rynochnye-kursy-valyut"
+timeout_ms = 5000
+
+[source.open_data]
+enabled = false
+url = ""
+timeout_ms = 5000
+rate_json_pointer = ""
+publish_time_json_pointer = ""
+rate_convention = "kzt_per_usd"
+
+[source.market_twap]
+enabled = false
+url = ""
+timeout_ms = 2500
+price_json_pointer = ""
+publish_time_json_pointer = ""
+
+[policy]
+interval_seconds = 300
+retry_count = 3
+retry_backoff_ms = 750
+base_confidence_bps = 25
+carry_forward_multiplier_bps = 20000
+soft_stale_multiplier_bps = 20000
+stale_multiplier_bps = 50000
+diverged_multiplier_bps = 30000
+minimum_confidence = 1
+publish_kzte_usdc = false
+allow_submit_when_halted = true
+
+[metrics]
+listen_addr = "127.0.0.1:9108"
