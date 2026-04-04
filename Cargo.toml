@@ -28,7 +28,7 @@ hex = "0.4.3"
 metrics = "0.23.0"
 metrics-exporter-prometheus = { version = "0.15.3", default-features = false, features = ["http-listener"] }
 regex = "1.11.1"
-reqwest = { version = "0.13.2", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.13.2", default-features = false, features = ["json", "rustls"] }
 rust_decimal = { version = "1.36.0", features = ["serde"] }
 scraper = "0.26.0"
 serde = { version = "1.0.217", features = ["derive"] }
