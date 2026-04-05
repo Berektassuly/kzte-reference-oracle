@@ -17,5 +17,6 @@ kzte-common = { path = "../common" }
 kzte-feeder = { path = "../feeder" }
 kzte_oracle = { path = "../../programs/kzte_oracle", features = ["no-entrypoint"] }
 serde_json.workspace = true
+solana-commitment-config.workspace = true
 solana-sdk.workspace = true
 tokio.workspace = true
