@@ -1,0 +1,18 @@
+# The only current RustSec vulnerabilities in this workspace come from the
+# local Solana test harness:
+#
+# integration-tests -> solana-program-test -> solana-runtime -> agave-precompiles
+#
+# These crates are only used for local/CI integration tests and are not linked
+# into the feeder, CLI, or on-chain program artifacts. Upstream Solana 3.1.x
+# and 4.0.0-beta still resolve this chain through ed25519-dalek 1.x, so there
+# is no patched drop-in upgrade available yet.
+#
+# Keep this file narrow on purpose: we ignore the two vulnerable advisories that
+# are currently unavoidable in the Solana test runtime, but we do not suppress
+# unrelated warnings such as unmaintained crates.
+[advisories]
+ignore = [
+    "RUSTSEC-2022-0093",
+    "RUSTSEC-2024-0344",
+]
