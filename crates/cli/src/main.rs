@@ -15,6 +15,7 @@ use solana_sdk::{
     signer::Signer,
 };
 use solana_system_interface::program as system_program;
+use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;
@@ -130,8 +131,7 @@ enum FeedStatusArg {
     Halted,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
     let config: CliConfig = load_toml_file(&args.config)
         .with_context(|| format!("failed to load CLI config from {}", args.config))?;
@@ -408,7 +408,7 @@ async fn main() -> Result<()> {
         Command::Update { feeder_config } => {
             let feeder_config = load_feeder_config(&feeder_config)?;
             let metrics = Arc::new(FeederMetrics::default());
-            let summary = run_once(&feeder_config, &metrics).await?;
+            let summary = run_async_command(run_once(&feeder_config, &metrics))?;
             print_json(json!({
                 "submitted": summary.submitted,
                 "skipped": summary.skipped,
@@ -420,6 +420,17 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn run_async_command<F, T>(future: F) -> Result<T>
+where
+    F: Future<Output = Result<T>>,
+{
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .context("failed to create Tokio runtime for async CLI command")?
+        .block_on(future)
 }
 
 fn program(config: &CliConfig, payer: AnchorKeypair) -> Result<Program<Rc<AnchorKeypair>>> {

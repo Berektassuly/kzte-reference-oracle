@@ -8,7 +8,7 @@ use constants::{EXPO, PRICE_SCALE};
 use error::OracleError;
 use state::{FeedAccount, FeedStatus, HaltBehavior, OracleConfig, PublisherSet};
 
-declare_id!("9FZHqpq5ffv8HLKtWMjVU8WuNTUH44WDYeKr6MEtx7ex");
+declare_id!("3jFfb765du9EE86BRxcscnasbgKZV1s5DdxtAuSJccXo");
 
 #[allow(deprecated)]
 #[program]

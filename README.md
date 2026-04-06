@@ -14,7 +14,7 @@ Important assumptions:
 
 - The repository ships with a **working official-page adapter** against the verified NBK HTML page above.
 - The **open data adapter is intentionally config-driven** because the exact dataset endpoint and payload schema were not hardcoded without explicit verification.
-- The repository ships with a **dev program id** (`9FZHqpq5ffv8HLKtWMjVU8WuNTUH44WDYeKr6MEtx7ex`) for local work. Replace it with your deployment keypair and run `anchor keys sync` before production deploy.
+- The repository ships with a **dev program id** (`3jFfb765du9EE86BRxcscnasbgKZV1s5DdxtAuSJccXo`) for local work. Replace it with your deployment keypair and run `anchor keys sync` before production deploy.
 - `KZTE_MINT` is **not hardcoded** anywhere in core logic. It is only relevant for optional market/TWAP integrations.
 
 ## Architecture
@@ -239,22 +239,24 @@ cargo build -p kzte-feeder --features market-twap
 
 ## Example Runs
 
+Copy `config/cli.example.toml` to `config/cli.toml` and `config/feeder.example.toml` to `config/feeder.toml` before running the commands below. The checked-in examples are prefilled for the current devnet deployment and can be edited for a different environment.
+
 One-shot feeder run:
 
 ```bash
-cargo run -p kzte-feeder -- --config config/feeder.example.toml --once
+cargo run -p kzte-feeder -- --config config/feeder.toml --once
 ```
 
 Long-running feeder service:
 
 ```bash
-cargo run -p kzte-feeder -- --config config/feeder.example.toml
+cargo run -p kzte-feeder -- --config config/feeder.toml
 ```
 
 Initialize oracle config:
 
 ```bash
-cargo run -p kzte-cli -- --config config/cli.example.toml init \
+cargo run -p kzte-cli -- --config config/cli.toml init \
   --config-keypair ./target/oracle-config.json \
   --soft-stale-seconds 86400 \
   --hard-stale-seconds 259200 \
@@ -266,30 +268,30 @@ cargo run -p kzte-cli -- --config config/cli.example.toml init \
 Create the canonical feeds:
 
 ```bash
-cargo run -p kzte-cli -- --config config/cli.example.toml create-feed \
+cargo run -p kzte-cli -- --config config/cli.toml create-feed \
   --symbol KZTE/KZT \
   --base-symbol KZTE \
   --quote-symbol KZT \
-  --is-reference-feed true
+  --is-reference-feed
 
-cargo run -p kzte-cli -- --config config/cli.example.toml create-feed \
+cargo run -p kzte-cli -- --config config/cli.toml create-feed \
   --symbol KZTE/USD \
   --base-symbol KZTE \
   --quote-symbol USD \
-  --is-reference-feed true
+  --is-reference-feed
 ```
 
 Read a feed:
 
 ```bash
-cargo run -p kzte-cli -- --config config/cli.example.toml read-feed --symbol KZTE/USD
+cargo run -p kzte-cli -- --config config/cli.toml read-feed --symbol KZTE/USD
 ```
 
 Run the update path from CLI:
 
 ```bash
-cargo run -p kzte-cli -- --config config/cli.example.toml update \
-  --feeder-config config/feeder.example.toml
+cargo run -p kzte-cli -- --config config/cli.toml update \
+  --feeder-config config/feeder.toml
 ```
 
 ## Deployment Steps

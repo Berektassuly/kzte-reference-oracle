@@ -5,11 +5,14 @@ anchor_version = "0.32.1"
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-kzte_oracle = "9FZHqpq5ffv8HLKtWMjVU8WuNTUH44WDYeKr6MEtx7ex"
+[programs.devnet]
+kzte_oracle = "3jFfb765du9EE86BRxcscnasbgKZV1s5DdxtAuSJccXo"
+
+[registry]
+url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
