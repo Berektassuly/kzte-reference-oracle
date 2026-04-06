@@ -9,7 +9,9 @@ use tokio::time::{interval, sleep};
 use tracing::{error, info, warn};
 
 use crate::adapters::{NbkOfficialPageAdapter, NbkOpenDataAdapter, SourceAdapter};
-use crate::aggregator::{aggregate_official_quotes, build_reference_submissions, should_skip_submission};
+use crate::aggregator::{
+    aggregate_official_quotes, build_reference_submissions, should_skip_submission,
+};
 use crate::metrics::{spawn_metrics_server, FeederMetrics};
 use crate::submitter::{parse_pubkey, OracleRpcClient};
 
@@ -42,7 +44,8 @@ pub async fn run_once(config: &FeederConfig, metrics: &Arc<FeederMetrics>) -> Re
     let rpc = OracleRpcClient::new(config)?;
     let (oracle_state, feed_set) = rpc.load_state(config).await?;
     let config_pubkey = parse_pubkey(&config.oracle.config_pubkey, "oracle config pubkey")?;
-    let publisher_set_pubkey = parse_pubkey(&config.oracle.publisher_set_pubkey, "publisher set pubkey")?;
+    let publisher_set_pubkey =
+        parse_pubkey(&config.oracle.publisher_set_pubkey, "publisher set pubkey")?;
 
     let official_quotes = fetch_official_quotes(config).await;
     let aggregated = match official_quotes {
@@ -87,7 +90,12 @@ pub async fn run_once(config: &FeederConfig, metrics: &Arc<FeederMetrics>) -> Re
 
         let feed_pubkey = feed_pubkey_for_symbol(config, &submission.feed_symbol)?;
         let signature = rpc
-            .submit_update(&config_pubkey, &publisher_set_pubkey, &feed_pubkey, &submission)
+            .submit_update(
+                &config_pubkey,
+                &publisher_set_pubkey,
+                &feed_pubkey,
+                &submission,
+            )
             .await?;
 
         info!(
@@ -111,7 +119,10 @@ pub async fn run_once(config: &FeederConfig, metrics: &Arc<FeederMetrics>) -> Re
         submitted,
         skipped,
         signatures,
-        used_official_sources: aggregated.as_ref().map(|value| value.source_count as usize).unwrap_or(0),
+        used_official_sources: aggregated
+            .as_ref()
+            .map(|value| value.source_count as usize)
+            .unwrap_or(0),
         carry_forward,
     })
 }
@@ -131,7 +142,12 @@ async fn fetch_official_quotes(config: &FeederConfig) -> Result<Vec<kzte_common:
     }
 
     let results = join_all(adapters.into_iter().map(|adapter| async move {
-        fetch_with_retry(adapter.as_ref(), config.policy.retry_count, config.policy.retry_backoff_ms).await
+        fetch_with_retry(
+            adapter.as_ref(),
+            config.policy.retry_count,
+            config.policy.retry_backoff_ms,
+        )
+        .await
     }))
     .await;
 
@@ -144,7 +160,9 @@ async fn fetch_official_quotes(config: &FeederConfig) -> Result<Vec<kzte_common:
     }
 
     if quotes.is_empty() {
-        Err(anyhow::anyhow!("no official sources returned a usable quote"))
+        Err(anyhow::anyhow!(
+            "no official sources returned a usable quote"
+        ))
     } else {
         Ok(quotes)
     }
@@ -157,8 +175,12 @@ async fn fetch_market_twap(config: &FeederConfig) -> Result<Option<kzte_common::
 
         if config.source.market_twap.enabled && !config.source.market_twap.url.trim().is_empty() {
             let adapter = OptionalMarketTwapAdapter::new(config.source.market_twap.clone())?;
-            let quote =
-                fetch_with_retry(&adapter, config.policy.retry_count, config.policy.retry_backoff_ms).await?;
+            let quote = fetch_with_retry(
+                &adapter,
+                config.policy.retry_count,
+                config.policy.retry_backoff_ms,
+            )
+            .await?;
             return Ok(Some(quote));
         }
     }
@@ -188,7 +210,10 @@ async fn fetch_with_retry(
                     error = ?error,
                     "source adapter failed, retrying"
                 );
-                sleep(Duration::from_millis(retry_backoff_ms.saturating_mul(attempts as u64))).await;
+                sleep(Duration::from_millis(
+                    retry_backoff_ms.saturating_mul(attempts as u64),
+                ))
+                .await;
             }
             Err(error) => {
                 return Err(error).context(format!(

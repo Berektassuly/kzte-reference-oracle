@@ -2,9 +2,11 @@ use anchor_client::{Client, Cluster, Program};
 use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use kzte_common::{load_toml_file, CliConfig};
-use kzte_feeder::{load_config as load_feeder_config, run_once};
 use kzte_feeder::metrics::FeederMetrics;
-use kzte_oracle::state::{FeedAccount, FeedStatus as ChainFeedStatus, HaltBehavior as ChainHaltBehavior, OracleConfig};
+use kzte_feeder::{load_config as load_feeder_config, run_once};
+use kzte_oracle::state::{
+    FeedAccount, FeedStatus as ChainFeedStatus, HaltBehavior as ChainHaltBehavior, OracleConfig,
+};
 use serde_json::json;
 use solana_commitment_config::CommitmentConfig;
 use solana_sdk::{
@@ -21,7 +23,11 @@ use std::sync::Arc;
 #[derive(Debug, Parser)]
 #[command(name = "kzte-cli", about = "CLI for the KZTE reference oracle")]
 struct Args {
-    #[arg(long, env = "CLI_CONFIG_PATH", default_value = "config/cli.example.toml")]
+    #[arg(
+        long,
+        env = "CLI_CONFIG_PATH",
+        default_value = "config/cli.example.toml"
+    )]
     config: String,
     #[command(subcommand)]
     command: Command,
@@ -99,7 +105,11 @@ enum Command {
         keep_last_good_price: bool,
     },
     Update {
-        #[arg(long, env = "FEEDER_CONFIG_PATH", default_value = "config/feeder.example.toml")]
+        #[arg(
+            long,
+            env = "FEEDER_CONFIG_PATH",
+            default_value = "config/feeder.example.toml"
+        )]
         feeder_config: String,
     },
 }
@@ -241,7 +251,9 @@ async fn main() -> Result<()> {
             let address = match (symbol, address) {
                 (_, Some(address)) => parse_pubkey(&address)?,
                 (Some(symbol), None) => feed_address_from_config(&config, &symbol, &program_id)?,
-                (None, None) => return Err(anyhow!("either --symbol or --address must be provided")),
+                (None, None) => {
+                    return Err(anyhow!("either --symbol or --address must be provided"))
+                }
             };
 
             let account: FeedAccount = program.account(address)?;
@@ -443,7 +455,10 @@ fn expand_tilde(path: &Path) -> Result<PathBuf> {
 
 fn publisher_set_pda(config_pubkey: &Pubkey, program_id: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(
-        &[kzte_oracle::state::PublisherSet::SEED_PREFIX, config_pubkey.as_ref()],
+        &[
+            kzte_oracle::state::PublisherSet::SEED_PREFIX,
+            config_pubkey.as_ref(),
+        ],
         program_id,
     )
     .0
@@ -451,17 +466,27 @@ fn publisher_set_pda(config_pubkey: &Pubkey, program_id: &Pubkey) -> Pubkey {
 
 fn feed_pda(config_pubkey: &Pubkey, symbol: &str, program_id: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(
-        &[kzte_oracle::state::FeedAccount::SEED_PREFIX, config_pubkey.as_ref(), symbol.as_bytes()],
+        &[
+            kzte_oracle::state::FeedAccount::SEED_PREFIX,
+            config_pubkey.as_ref(),
+            symbol.as_bytes(),
+        ],
         program_id,
     )
     .0
 }
 
-fn feed_address_from_config(config: &CliConfig, symbol: &str, program_id: &Pubkey) -> Result<Pubkey> {
+fn feed_address_from_config(
+    config: &CliConfig,
+    symbol: &str,
+    program_id: &Pubkey,
+) -> Result<Pubkey> {
     match symbol {
         "KZTE/KZT" => parse_pubkey(&config.feeds.kzte_kzt),
         "KZTE/USD" => parse_pubkey(&config.feeds.kzte_usd),
-        "KZTE/USDC" if !config.feeds.kzte_usdc.trim().is_empty() => parse_pubkey(&config.feeds.kzte_usdc),
+        "KZTE/USDC" if !config.feeds.kzte_usdc.trim().is_empty() => {
+            parse_pubkey(&config.feeds.kzte_usdc)
+        }
         other => {
             let config_pubkey = parse_pubkey(&config.oracle.config_pubkey)?;
             Ok(feed_pda(&config_pubkey, other, program_id))

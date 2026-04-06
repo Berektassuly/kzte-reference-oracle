@@ -33,14 +33,13 @@ pub fn checked_mul_div_i64(lhs: i64, rhs: i64, divisor: i64) -> Result<i64, Math
 
     // Keep scaled reciprocal price conversions symmetric at 1e8 precision by
     // rounding to the nearest integer instead of truncating toward zero.
-    if remainder != 0
-        && remainder
-            .abs()
-            .checked_mul(2)
-            .ok_or(MathError::Overflow)?
-            >= divisor.abs()
+    if remainder != 0 && remainder.abs().checked_mul(2).ok_or(MathError::Overflow)? >= divisor.abs()
     {
-        let adjustment = if (product >= 0) == (divisor >= 0) { 1 } else { -1 };
+        let adjustment = if (product >= 0) == (divisor >= 0) {
+            1
+        } else {
+            -1
+        };
         value = value.checked_add(adjustment).ok_or(MathError::Overflow)?;
     }
 
@@ -68,7 +67,10 @@ pub fn derive_kzte_usd_from_kzt_per_usd(kzt_per_usd: i64) -> Result<i64, MathErr
     derive_usd_per_kzt_from_kzt_per_usd(kzt_per_usd)
 }
 
-pub fn calculate_deviation_bps(reference_price: i64, observed_price: i64) -> Result<u32, MathError> {
+pub fn calculate_deviation_bps(
+    reference_price: i64,
+    observed_price: i64,
+) -> Result<u32, MathError> {
     if reference_price <= 0 || observed_price <= 0 {
         return Err(MathError::NegativePrice);
     }
@@ -83,7 +85,11 @@ pub fn calculate_deviation_bps(reference_price: i64, observed_price: i64) -> Res
     u32::try_from(bps).map_err(|_| MathError::Overflow)
 }
 
-pub fn confidence_from_bps(price: i64, bps: u32, minimum_confidence: u64) -> Result<u64, MathError> {
+pub fn confidence_from_bps(
+    price: i64,
+    bps: u32,
+    minimum_confidence: u64,
+) -> Result<u64, MathError> {
     if price <= 0 {
         return Err(MathError::NegativePrice);
     }

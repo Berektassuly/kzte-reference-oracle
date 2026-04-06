@@ -12,7 +12,9 @@ pub enum OracleError {
     PendingAdminMissing,
     #[msg("too many publishers")]
     TooManyPublishers,
-    #[msg("soft stale threshold must be non-negative and less than or equal to hard stale threshold")]
+    #[msg(
+        "soft stale threshold must be non-negative and less than or equal to hard stale threshold"
+    )]
     InvalidThresholds,
     #[msg("only price scale 1e8 is supported by this deployment")]
     InvalidPriceScale,

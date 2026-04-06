@@ -4,8 +4,12 @@ use std::env;
 use std::path::{Path, PathBuf};
 
 pub fn load_config(path: impl AsRef<Path>) -> Result<FeederConfig> {
-    let mut config: FeederConfig = load_toml_file(path.as_ref())
-        .with_context(|| format!("failed to load feeder config from {}", path.as_ref().display()))?;
+    let mut config: FeederConfig = load_toml_file(path.as_ref()).with_context(|| {
+        format!(
+            "failed to load feeder config from {}",
+            path.as_ref().display()
+        )
+    })?;
 
     if let Ok(value) = env::var("SOLANA_RPC_URL") {
         config.rpc.http_url = value;
@@ -44,7 +48,9 @@ pub fn load_config(path: impl AsRef<Path>) -> Result<FeederConfig> {
         config.source.market_twap.url = value;
     }
 
-    config.rpc.keypair_path = expand_tilde(&config.rpc.keypair_path)?.display().to_string();
+    config.rpc.keypair_path = expand_tilde(&config.rpc.keypair_path)?
+        .display()
+        .to_string();
     Ok(config)
 }
 

@@ -3,13 +3,17 @@ use std::sync::Arc;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-use kzte_feeder::{load_config, run_once, run_service};
 use kzte_feeder::metrics::FeederMetrics;
+use kzte_feeder::{load_config, run_once, run_service};
 
 #[derive(Debug, Parser)]
 #[command(name = "kzte-feeder", about = "KZTE reference oracle feeder")]
 struct Args {
-    #[arg(long, env = "FEEDER_CONFIG_PATH", default_value = "config/feeder.example.toml")]
+    #[arg(
+        long,
+        env = "FEEDER_CONFIG_PATH",
+        default_value = "config/feeder.example.toml"
+    )]
     config: String,
     #[arg(long)]
     once: bool,

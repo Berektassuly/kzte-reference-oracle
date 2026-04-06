@@ -3,7 +3,9 @@
 use anyhow::{anyhow, Context, Result};
 use async_trait::async_trait;
 use chrono::{DateTime, NaiveDate, Utc};
-use kzte_common::{decimal_to_scaled_i64, MarketTwapSourceConfig, RateConvention, SourceQuote, PRICE_SCALE};
+use kzte_common::{
+    decimal_to_scaled_i64, MarketTwapSourceConfig, RateConvention, SourceQuote, PRICE_SCALE,
+};
 use reqwest::Client;
 use rust_decimal::Decimal;
 use serde_json::Value;
@@ -30,13 +32,20 @@ impl OptionalMarketTwapAdapter {
     }
 
     fn parse(&self, body: &str, observed_at: DateTime<Utc>) -> Result<SourceQuote> {
-        let json: Value = serde_json::from_str(body).context("failed to parse market TWAP payload")?;
+        let json: Value =
+            serde_json::from_str(body).context("failed to parse market TWAP payload")?;
         let price = json
             .pointer(&self.config.price_json_pointer)
-            .ok_or_else(|| anyhow!("configured price_json_pointer did not match the market TWAP payload"))?;
+            .ok_or_else(|| {
+                anyhow!("configured price_json_pointer did not match the market TWAP payload")
+            })?;
         let publish_time = json
             .pointer(&self.config.publish_time_json_pointer)
-            .ok_or_else(|| anyhow!("configured publish_time_json_pointer did not match the market TWAP payload"))?;
+            .ok_or_else(|| {
+                anyhow!(
+                    "configured publish_time_json_pointer did not match the market TWAP payload"
+                )
+            })?;
 
         let scaled_price = decimal_to_scaled_i64(parse_decimal_value(price)?, PRICE_SCALE)?;
         let publish_time = parse_time_value(publish_time)?;
@@ -65,8 +74,16 @@ impl SourceAdapter for OptionalMarketTwapAdapter {
             .await
             .with_context(|| format!("failed to fetch market TWAP endpoint {}", self.config.url))?
             .error_for_status()
-            .with_context(|| format!("market TWAP endpoint returned non-success status for {}", self.config.url))?;
-        let body = response.text().await.context("failed to read market TWAP body")?;
+            .with_context(|| {
+                format!(
+                    "market TWAP endpoint returned non-success status for {}",
+                    self.config.url
+                )
+            })?;
+        let body = response
+            .text()
+            .await
+            .context("failed to read market TWAP body")?;
         self.parse(&body, Utc::now())
     }
 
@@ -77,9 +94,15 @@ impl SourceAdapter for OptionalMarketTwapAdapter {
 
 fn parse_decimal_value(value: &Value) -> Result<Decimal> {
     match value {
-        Value::String(inner) => Decimal::from_str(inner.trim()).context("failed to parse string decimal"),
-        Value::Number(inner) => Decimal::from_str(&inner.to_string()).context("failed to parse numeric decimal"),
-        _ => Err(anyhow!("market TWAP decimal field must be a string or number")),
+        Value::String(inner) => {
+            Decimal::from_str(inner.trim()).context("failed to parse string decimal")
+        }
+        Value::Number(inner) => {
+            Decimal::from_str(&inner.to_string()).context("failed to parse numeric decimal")
+        }
+        _ => Err(anyhow!(
+            "market TWAP decimal field must be a string or number"
+        )),
     }
 }
 
@@ -97,9 +120,11 @@ fn parse_time_value(value: &Value) -> Result<i64> {
                 .and_utc()
                 .timestamp())
         }
-        Value::Number(inner) => inner
-            .as_i64()
-            .ok_or_else(|| anyhow!("market TWAP publish time number must be an i64 epoch timestamp")),
-        _ => Err(anyhow!("market TWAP publish time field must be a string or number")),
+        Value::Number(inner) => inner.as_i64().ok_or_else(|| {
+            anyhow!("market TWAP publish time number must be an i64 epoch timestamp")
+        }),
+        _ => Err(anyhow!(
+            "market TWAP publish time field must be a string or number"
+        )),
     }
 }

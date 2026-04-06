@@ -2,8 +2,8 @@ use anyhow::{anyhow, Context, Result};
 use chrono::Utc;
 use kzte_common::{
     calculate_deviation_bps, carry_forward_decision, checked_mul_div_i64, classify_staleness,
-    confidence_from_bps, derive_kzte_usd_from_kzt_per_usd, FeedStatus, HaltBehavior,
-    PolicyConfig, RateConvention, ReferenceSubmission, SourceQuote, StalenessTier, PRICE_SCALE,
+    confidence_from_bps, derive_kzte_usd_from_kzt_per_usd, FeedStatus, HaltBehavior, PolicyConfig,
+    RateConvention, ReferenceSubmission, SourceQuote, StalenessTier, PRICE_SCALE,
 };
 
 #[derive(Debug, Clone)]
@@ -88,40 +88,46 @@ pub fn build_reference_submissions(
         .map(|quote| quote.observed_at)
         .unwrap_or_else(|| Utc::now().timestamp());
 
-    let (kzte_kzt_price, kzte_usd_price, publish_time, source_count, raw_payload_hash, metadata_version) =
-        if let Some(quote) = official_quote {
-            (
-                PRICE_SCALE,
-                derive_kzte_usd_from_kzt_per_usd(quote.kzt_per_usd)?,
-                quote.publish_time,
-                quote.source_count,
-                quote.raw_payload_hash,
-                feeds.kzte_usd.metadata_version.saturating_add(1),
-            )
+    let (
+        kzte_kzt_price,
+        kzte_usd_price,
+        publish_time,
+        source_count,
+        raw_payload_hash,
+        metadata_version,
+    ) = if let Some(quote) = official_quote {
+        (
+            PRICE_SCALE,
+            derive_kzte_usd_from_kzt_per_usd(quote.kzt_per_usd)?,
+            quote.publish_time,
+            quote.source_count,
+            quote.raw_payload_hash,
+            feeds.kzte_usd.metadata_version.saturating_add(1),
+        )
+    } else {
+        let usd_price = if feeds.kzte_usd.last_good_price > 0 {
+            feeds.kzte_usd.last_good_price
         } else {
-            let usd_price = if feeds.kzte_usd.last_good_price > 0 {
-                feeds.kzte_usd.last_good_price
-            } else {
-                feeds.kzte_usd.price
-            };
-            if usd_price <= 0 {
-                return Err(anyhow!(
-                    "cannot carry forward without an existing last_good_price for KZTE/USD"
-                ));
-            }
-            (
-                if feeds.kzte_kzt.last_good_price > 0 {
-                    feeds.kzte_kzt.last_good_price
-                } else {
-                    PRICE_SCALE
-                },
-                usd_price,
-                feeds.kzte_usd.publish_time,
-                feeds.kzte_usd.source_count.max(1),
-                feeds.kzte_usd.metadata_hash,
-                feeds.kzte_usd.metadata_version,
-            )
+            feeds.kzte_usd.price
         };
+        if usd_price <= 0 {
+            return Err(anyhow!(
+                "cannot carry forward without an existing last_good_price for KZTE/USD"
+            ));
+        }
+        (
+            if feeds.kzte_kzt.last_good_price > 0 {
+                feeds.kzte_kzt.last_good_price
+            } else {
+                PRICE_SCALE
+            },
+            usd_price,
+            feeds.kzte_usd.publish_time,
+            feeds.kzte_usd.source_count.max(1),
+            feeds.kzte_usd.metadata_hash,
+            feeds.kzte_usd.metadata_version,
+        )
+    };
 
     let deviation_bps = market_twap
         .map(|quote| calculate_deviation_bps(kzte_usd_price, quote.price))
@@ -276,16 +282,24 @@ pub fn expected_status(
         observed_at,
         oracle.hard_stale_seconds,
     )?;
-    if matches!(carry_forward_state, kzte_common::CarryForwardDecision::CarryForward) {
+    if matches!(
+        carry_forward_state,
+        kzte_common::CarryForwardDecision::CarryForward
+    ) {
         return Ok(FeedStatus::CarryForward);
     }
 
     Ok(FeedStatus::Active)
 }
 
-pub fn should_skip_submission(status: FeedStatus, oracle: &OracleThresholds, policy: &PolicyConfig) -> bool {
+pub fn should_skip_submission(
+    status: FeedStatus,
+    oracle: &OracleThresholds,
+    policy: &PolicyConfig,
+) -> bool {
     matches!(status, FeedStatus::Halted)
-        && (matches!(oracle.halt_behavior, HaltBehavior::Reject) || !policy.allow_submit_when_halted)
+        && (matches!(oracle.halt_behavior, HaltBehavior::Reject)
+            || !policy.allow_submit_when_halted)
 }
 
 fn confidence_for_submission(
@@ -328,7 +342,9 @@ fn confidence_for_submission(
 fn normalize_to_kzt_per_usd(quote: &SourceQuote) -> Result<i64> {
     match quote.convention {
         RateConvention::KztPerUsd => Ok(quote.price),
-        RateConvention::UsdPerKzt => checked_mul_div_i64(PRICE_SCALE, PRICE_SCALE, quote.price).map_err(Into::into),
+        RateConvention::UsdPerKzt => {
+            checked_mul_div_i64(PRICE_SCALE, PRICE_SCALE, quote.price).map_err(Into::into)
+        }
     }
 }
 
@@ -409,8 +425,13 @@ mod tests {
             kzte_usdc: None,
         };
 
-        let submissions = build_reference_submissions(Some(&aggregated), None, &oracle(), &feeds, &policy()).unwrap();
-        let usd = submissions.iter().find(|submission| submission.feed_symbol == "KZTE/USD").unwrap();
+        let submissions =
+            build_reference_submissions(Some(&aggregated), None, &oracle(), &feeds, &policy())
+                .unwrap();
+        let usd = submissions
+            .iter()
+            .find(|submission| submission.feed_symbol == "KZTE/USD")
+            .unwrap();
 
         assert_eq!(usd.price, 212_558);
         assert_eq!(usd.sequence, 43);

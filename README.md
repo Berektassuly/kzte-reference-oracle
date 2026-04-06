@@ -188,7 +188,8 @@ The feeder computes `conf` from `base_confidence_bps` and widens it when:
 
 - Working default adapter.
 - Fetches the verified NBK official daily-rates HTML page.
-- Parses `USD / KZT` and the page date.
+- Reads the `#exchange-table` row for `USD / KZT`, with a text fallback for simplified fixtures.
+- Treats the page date as the next business-day effective date and maps `publish_time` to the inferred previous business-day USD fixing time (`15:30` Astana).
 - Normalizes to `1e8`.
 
 ### 2. `NbkOpenDataAdapter`

@@ -60,7 +60,10 @@ impl FeederMetrics {
     }
 }
 
-pub async fn spawn_metrics_server(listen_addr: &str, metrics: Arc<FeederMetrics>) -> Result<JoinHandle<()>> {
+pub async fn spawn_metrics_server(
+    listen_addr: &str,
+    metrics: Arc<FeederMetrics>,
+) -> Result<JoinHandle<()>> {
     let app = Router::new()
         .route("/metrics", get(metrics_handler))
         .with_state(metrics);

@@ -61,7 +61,11 @@ pub mod kzte_oracle {
             .pending_admin
             .ok_or_else(|| error!(OracleError::PendingAdminMissing))?;
 
-        require_keys_eq!(pending, ctx.accounts.new_admin.key(), OracleError::Unauthorized);
+        require_keys_eq!(
+            pending,
+            ctx.accounts.new_admin.key(),
+            OracleError::Unauthorized
+        );
         config.admin = pending;
         config.pending_admin = None;
         Ok(())
@@ -132,7 +136,9 @@ pub mod kzte_oracle {
         let config = &mut ctx.accounts.config;
         require!(!config.paused, OracleError::OraclePaused);
         require!(
-            ctx.accounts.publisher_set.contains(&ctx.accounts.publisher.key()),
+            ctx.accounts
+                .publisher_set
+                .contains(&ctx.accounts.publisher.key()),
             OracleError::UnauthorizedPublisher
         );
         require_keys_eq!(
@@ -160,7 +166,10 @@ pub mod kzte_oracle {
             OracleError::PublishTimeWentBackwards
         );
         if args.twap_price.is_none() {
-            require!(args.peg_deviation_bps == 0, OracleError::InvalidPegDeviation);
+            require!(
+                args.peg_deviation_bps == 0,
+                OracleError::InvalidPegDeviation
+            );
         }
 
         let next_status = resolve_status(config, &ctx.accounts.feed, &args)?;
@@ -350,18 +359,31 @@ fn validate_thresholds(
     price_scale: u64,
 ) -> Result<()> {
     require!(soft_stale_seconds >= 0, OracleError::InvalidThresholds);
-    require!(hard_stale_seconds >= soft_stale_seconds, OracleError::InvalidThresholds);
-    require!(halt_deviation_bps >= warn_deviation_bps, OracleError::InvalidThresholds);
+    require!(
+        hard_stale_seconds >= soft_stale_seconds,
+        OracleError::InvalidThresholds
+    );
+    require!(
+        halt_deviation_bps >= warn_deviation_bps,
+        OracleError::InvalidThresholds
+    );
     require!(price_scale == PRICE_SCALE, OracleError::InvalidPriceScale);
     Ok(())
 }
 
 fn validate_submit_timestamps(args: &SubmitUpdateArgs) -> Result<()> {
-    require!(args.observed_at >= args.publish_time, OracleError::InvalidTimestamps);
+    require!(
+        args.observed_at >= args.publish_time,
+        OracleError::InvalidTimestamps
+    );
     Ok(())
 }
 
-fn resolve_status(config: &OracleConfig, feed: &FeedAccount, args: &SubmitUpdateArgs) -> Result<FeedStatus> {
+fn resolve_status(
+    config: &OracleConfig,
+    feed: &FeedAccount,
+    args: &SubmitUpdateArgs,
+) -> Result<FeedStatus> {
     let age = args
         .observed_at
         .checked_sub(args.publish_time)

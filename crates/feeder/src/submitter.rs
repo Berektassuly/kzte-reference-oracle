@@ -1,8 +1,9 @@
-use anyhow::{anyhow, Context, Result};
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+use anyhow::{anyhow, Context, Result};
 use kzte_common::{FeederConfig, HaltBehavior};
 use kzte_oracle::state::{
-    FeedAccount as ChainFeedAccount, HaltBehavior as ChainHaltBehavior, OracleConfig as ChainOracleConfig,
+    FeedAccount as ChainFeedAccount, HaltBehavior as ChainHaltBehavior,
+    OracleConfig as ChainOracleConfig,
 };
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_commitment_config::CommitmentConfig;
@@ -27,14 +28,13 @@ pub struct OracleRpcClient {
 impl OracleRpcClient {
     pub fn new(config: &FeederConfig) -> Result<Self> {
         let signer = Arc::new(
-            read_keypair_file(&config.rpc.keypair_path)
-                .map_err(|error| {
-                    anyhow!(
-                        "failed to read keypair at {}: {}",
-                        config.rpc.keypair_path,
-                        error
-                    )
-                })?,
+            read_keypair_file(&config.rpc.keypair_path).map_err(|error| {
+                anyhow!(
+                    "failed to read keypair at {}: {}",
+                    config.rpc.keypair_path,
+                    error
+                )
+            })?,
         );
         let program_id = Pubkey::from_str(&config.rpc.program_id)
             .with_context(|| format!("invalid program id {}", config.rpc.program_id))?;
@@ -119,7 +119,11 @@ impl OracleRpcClient {
             accounts: accounts.to_account_metas(None),
             data: kzte_oracle::instruction::SubmitUpdate { args }.data(),
         };
-        let blockhash = self.rpc.get_latest_blockhash().await.context("failed to fetch recent blockhash")?;
+        let blockhash = self
+            .rpc
+            .get_latest_blockhash()
+            .await
+            .context("failed to fetch recent blockhash")?;
         let transaction = Transaction::new_signed_with_payer(
             &[instruction],
             Some(&self.signer.pubkey()),
@@ -130,7 +134,12 @@ impl OracleRpcClient {
         self.rpc
             .send_and_confirm_transaction(&transaction)
             .await
-            .with_context(|| format!("failed to submit oracle update for {}", submission.feed_symbol))
+            .with_context(|| {
+                format!(
+                    "failed to submit oracle update for {}",
+                    submission.feed_symbol
+                )
+            })
     }
 
     pub fn rpc(&self) -> &RpcClient {
@@ -147,7 +156,8 @@ impl OracleRpcClient {
             .await
             .with_context(|| format!("failed to fetch account {}", pubkey))?;
         let mut slice: &[u8] = data.as_ref();
-        T::try_deserialize(&mut slice).with_context(|| format!("failed to deserialize account {}", pubkey))
+        T::try_deserialize(&mut slice)
+            .with_context(|| format!("failed to deserialize account {}", pubkey))
     }
 }
 

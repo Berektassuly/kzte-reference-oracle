@@ -28,13 +28,20 @@ impl NbkOpenDataAdapter {
     }
 
     fn parse(&self, body: &str, observed_at: DateTime<Utc>) -> Result<SourceQuote> {
-        let json: Value = serde_json::from_str(body).context("failed to parse NBK open data payload")?;
+        let json: Value =
+            serde_json::from_str(body).context("failed to parse NBK open data payload")?;
         let price_value = json
             .pointer(&self.config.rate_json_pointer)
-            .ok_or_else(|| anyhow!("configured rate_json_pointer did not match the NBK open data payload"))?;
+            .ok_or_else(|| {
+                anyhow!("configured rate_json_pointer did not match the NBK open data payload")
+            })?;
         let publish_time_value = json
             .pointer(&self.config.publish_time_json_pointer)
-            .ok_or_else(|| anyhow!("configured publish_time_json_pointer did not match the NBK open data payload"))?;
+            .ok_or_else(|| {
+                anyhow!(
+                    "configured publish_time_json_pointer did not match the NBK open data payload"
+                )
+            })?;
 
         let price = parse_decimal_value(price_value)?;
         let publish_time = parse_time_value(publish_time_value)?;
@@ -64,8 +71,16 @@ impl SourceAdapter for NbkOpenDataAdapter {
             .await
             .with_context(|| format!("failed to fetch NBK open data endpoint {}", self.config.url))?
             .error_for_status()
-            .with_context(|| format!("NBK open data endpoint returned non-success status for {}", self.config.url))?;
-        let body = response.text().await.context("failed to read NBK open data body")?;
+            .with_context(|| {
+                format!(
+                    "NBK open data endpoint returned non-success status for {}",
+                    self.config.url
+                )
+            })?;
+        let body = response
+            .text()
+            .await
+            .context("failed to read NBK open data body")?;
         self.parse(&body, Utc::now())
     }
 
@@ -76,9 +91,15 @@ impl SourceAdapter for NbkOpenDataAdapter {
 
 fn parse_decimal_value(value: &Value) -> Result<Decimal> {
     match value {
-        Value::String(inner) => Decimal::from_str(inner.trim()).context("failed to parse string decimal"),
-        Value::Number(inner) => Decimal::from_str(&inner.to_string()).context("failed to parse numeric decimal"),
-        _ => Err(anyhow!("open data decimal field must be a string or number")),
+        Value::String(inner) => {
+            Decimal::from_str(inner.trim()).context("failed to parse string decimal")
+        }
+        Value::Number(inner) => {
+            Decimal::from_str(&inner.to_string()).context("failed to parse numeric decimal")
+        }
+        _ => Err(anyhow!(
+            "open data decimal field must be a string or number"
+        )),
     }
 }
 
@@ -99,6 +120,8 @@ fn parse_time_value(value: &Value) -> Result<i64> {
         Value::Number(inner) => inner
             .as_i64()
             .ok_or_else(|| anyhow!("open data publish time number must be an i64 epoch timestamp")),
-        _ => Err(anyhow!("open data publish time field must be a string or number")),
+        _ => Err(anyhow!(
+            "open data publish time field must be a string or number"
+        )),
     }
 }

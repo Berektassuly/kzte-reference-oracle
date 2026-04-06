@@ -33,7 +33,10 @@ impl PublisherSet {
     pub const LEN: usize = 8 + 32 + 4 + (MAX_PUBLISHERS * 32);
 
     pub fn replace_publishers(&mut self, config: Pubkey, publishers: Vec<Pubkey>) -> Result<()> {
-        require!(publishers.len() <= MAX_PUBLISHERS, OracleError::TooManyPublishers);
+        require!(
+            publishers.len() <= MAX_PUBLISHERS,
+            OracleError::TooManyPublishers
+        );
         if self.config != Pubkey::default() && self.config != config {
             return err!(OracleError::PublisherSetAlreadyBound);
         }
@@ -44,7 +47,9 @@ impl PublisherSet {
     }
 
     pub fn contains(&self, candidate: &Pubkey) -> bool {
-        self.publishers.iter().any(|publisher| publisher == candidate)
+        self.publishers
+            .iter()
+            .any(|publisher| publisher == candidate)
     }
 }
 
@@ -72,9 +77,15 @@ pub struct FeedAccount {
 
 impl FeedAccount {
     pub const SEED_PREFIX: &'static [u8] = b"feed";
-    pub const LEN: usize = 8 + 32 + 16 + 8 + 8 + 8 + 8 + 4 + 8 + 8 + 1 + 1 + 8 + 4 + 8 + 1 + 9 + 32 + 4;
+    pub const LEN: usize =
+        8 + 32 + 16 + 8 + 8 + 8 + 8 + 4 + 8 + 8 + 1 + 1 + 8 + 4 + 8 + 1 + 9 + 32 + 4;
 
-    pub fn set_symbols(&mut self, symbol: &str, base_symbol: &str, quote_symbol: &str) -> Result<()> {
+    pub fn set_symbols(
+        &mut self,
+        symbol: &str,
+        base_symbol: &str,
+        quote_symbol: &str,
+    ) -> Result<()> {
         self.symbol = encode_fixed::<MAX_FEED_SYMBOL_LEN>(symbol)?;
         self.base_symbol = encode_fixed::<MAX_ASSET_SYMBOL_LEN>(base_symbol)?;
         self.quote_symbol = encode_fixed::<MAX_ASSET_SYMBOL_LEN>(quote_symbol)?;
@@ -82,9 +93,7 @@ impl FeedAccount {
     }
 }
 
-#[derive(
-    AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq, InitSpace,
-)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq, InitSpace)]
 pub enum FeedStatus {
     Active,
     CarryForward,
@@ -94,9 +103,7 @@ pub enum FeedStatus {
     Halted,
 }
 
-#[derive(
-    AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq, InitSpace,
-)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq, InitSpace)]
 pub enum HaltBehavior {
     Reject,
     StoreHalted,
