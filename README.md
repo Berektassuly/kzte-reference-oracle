@@ -105,8 +105,6 @@ The oracle-specific tree added in this repo is:
         `-- lib.rs
 ```
 
-Note: existing unrelated `frontend/` and `backend/` directories were left untouched.
-
 ## Docs
 
 - [`docs/price-conversions.md`](docs/price-conversions.md) explains fixed-point scale, supported rate conventions, and the reciprocal rounding rule used for `KZTE/USD`.

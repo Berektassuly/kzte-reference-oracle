@@ -1,9 +1,9 @@
 # Dependencies
-frontend/node_modules/
+node_modules/
 
 # Next.js build output
-frontend/.next/
-frontend/out/
+.next/
+out/
 
 # Rust / Anchor
 /target/
@@ -20,14 +20,14 @@ test-ledger/
 target/
 
 # Local environment files
-frontend/.env*
-!frontend/.env.example
+.env*
+!.env.example
 
 # Package manager logs
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-frontend/pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # OS files
 .DS_Store

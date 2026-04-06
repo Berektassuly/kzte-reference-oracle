@@ -4,7 +4,7 @@ Use the prompt below to ask another model to generate CI tests and GitHub Action
 
 ```text
 Role
-You are a senior DevOps and test automation engineer. You specialize in GitHub Actions, Rust workspaces, Solana/Anchor projects, and Next.js monorepos. You write production-grade CI that is deterministic, cache-aware, and easy to maintain.
+You are a senior DevOps and test automation engineer. You specialize in GitHub Actions, Rust workspaces, and Solana/Anchor projects. You write production-grade CI that is deterministic, cache-aware, and easy to maintain.
 
 Task
 Create a CI solution for this repository using GitHub Actions. Your output should include the workflow file(s), any small supporting script changes that are truly necessary, and a short explanation of why each job exists.
@@ -14,9 +14,8 @@ The CI should:
 - validate the Rust workspace;
 - run the existing Rust tests;
 - cover the Solana/Anchor integration-test path in a practical way;
-- validate the frontend build;
 - avoid depending on production secrets or external NBK endpoints for required checks;
-- use caching for Rust and Node dependencies;
+- use caching for Rust dependencies;
 - keep the default PR pipeline reasonably fast.
 
 Prefer the smallest reliable solution, but do not skip important validation. If the Anchor toolchain setup is too heavy for the default workflow, separate it into a dedicated job and explain the tradeoff instead of silently omitting it.
@@ -37,13 +36,12 @@ Current repository structure:
   - `crates/cli`
   - `programs/kzte_oracle`
   - `tests`
-- Frontend app in `frontend/` using Next.js.
 
 Observed tech stack and commands:
 - Root `Cargo.toml` defines a Rust workspace using edition 2021.
-- Rust dependencies include Anchor `1.0.0`, Solana `3.x/4.x`, Tokio, Reqwest, Axum, and `solana-program-test`.
-- `Anchor.toml` sets `anchor_version = "1.0.0"` and defines:
-  - provider cluster: `Localnet`
+- Rust dependencies include Anchor `0.32.1`, Solana `2.x`, Tokio, Reqwest, Axum, and `solana-program-test`.
+- `Anchor.toml` sets `anchor_version = "0.32.1"` and defines:
+  - provider cluster: `devnet`
   - test script: `cargo test -p integration-tests -- --nocapture`
 - `tests/src/integration.rs` uses `solana-program-test`, which suggests integration tests can run locally without a real external RPC.
 - `scripts/anchor-test.ps1` currently runs `anchor test`.
@@ -61,29 +59,16 @@ Observed tech stack and commands:
   - deviation threshold classification
   - unauthorized signer rejection
   - replay rejection
-- The repo currently has no `.github/workflows/` directory.
-
-Frontend facts:
-- `frontend/package.json` has these scripts:
-  - `dev`
-  - `build`
-  - `start`
-- The frontend uses:
-  - `next@16.2.2`
-  - `react@19.2.4`
-  - `react-dom@19.2.4`
-  - `typescript@5.9.3`
-- A local `npm run build` in `frontend/` succeeds.
+- The repo currently has an existing workflow at `.github/workflows/ci.yml`.
 
 Constraints and preferences:
 - Use GitHub Actions.
 - Assume Linux runners unless a different OS is strictly necessary.
 - Do not require production secrets for mandatory jobs.
 - Do not invent nonexistent test commands.
-- If the frontend lacks dedicated test or lint scripts, use the existing build as the required validation, and only add extra scripts if there is a clear benefit.
 - Keep the workflow explicit and readable rather than overly clever.
 - Prefer path-aware or job-level efficiency if it improves runtime without making maintenance confusing.
-- Use dependency caching for Cargo and npm.
+- Use dependency caching for Cargo.
 - Call out any part that may be flaky because of Anchor or Solana installation, and make a sensible recommendation.
 
 What I want from you
