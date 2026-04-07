@@ -60,7 +60,7 @@ The landing page should immediately show:
 - A clearly visible oracle health summary
 - A short explanation of why this oracle is different from market-priced crypto feeds
 
-The homepage should feel like an operator’s summary screen, not a marketing hero for retail users.
+The homepage should feel like an operator's summary screen, not a marketing hero for retail users.
 
 #### 2. Feed Details
 
@@ -175,7 +175,7 @@ The interface should de-emphasize:
 - trading behavior
 - wallet actions
 - token hype
-- flashy “number go up” storytelling
+- flashy "number go up" storytelling
 
 ### Strong Anti-Requirements
 
@@ -186,7 +186,7 @@ Do **not** design this like:
 - a wallet onboarding flow
 - a candlestick trading terminal
 - a generic crypto portfolio dashboard
-- a “high-frequency market data” hero product
+- a "high-frequency market data" hero product
 - a Pyth / SOL / BTC / ETH market feed product
 
 Do **not** center the interface around:

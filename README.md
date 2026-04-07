@@ -43,72 +43,40 @@ The system is split into three layers:
 
 ## Repository Tree
 
-The oracle-specific tree added in this repo is:
+High-level repository layout (not exhaustive):
 
 ```text
 .
+|-- .env.example
+|-- .github/workflows/ci.yml
 |-- Anchor.toml
 |-- Cargo.toml
 |-- Dockerfile
 |-- README.md
-|-- .env.example
-|-- docs
-|   |-- github-ci-tests-prompt.md
-|   `-- price-conversions.md
 |-- config
 |   |-- cli.example.toml
-|   `-- feeder.example.toml
+|   |-- cli.toml
+|   |-- feeder.example.toml
+|   `-- feeder.toml
+|-- docs
+|   |-- github-ci-tests-prompt.md
+|   |-- price-conversions.md
+|   `-- ui-design-prompt.md
 |-- crates
 |   |-- cli
-|   |   |-- Cargo.toml
-|   |   `-- src/main.rs
 |   |-- common
-|   |   |-- Cargo.toml
-|   |   `-- src
-|   |       |-- business_day.rs
-|   |       |-- config.rs
-|   |       |-- lib.rs
-|   |       |-- math.rs
-|   |       `-- types.rs
 |   `-- feeder
-|       |-- Cargo.toml
-|       `-- src
-|           |-- adapters
-|           |   |-- mod.rs
-|           |   |-- nbk_official_page.rs
-|           |   |-- nbk_open_data.rs
-|           |   `-- optional_market_twap.rs
-|           |-- aggregator.rs
-|           |-- config.rs
-|           |-- lib.rs
-|           |-- main.rs
-|           |-- metrics.rs
-|           |-- service.rs
-|           `-- submitter.rs
 |-- programs
 |   `-- kzte_oracle
-|       |-- Cargo.toml
-|       `-- src
-|           |-- constants.rs
-|           |-- error.rs
-|           |-- lib.rs
-|           `-- state.rs
 |-- scripts
-|   |-- anchor-test.ps1
-|   `-- run-feeder-once.ps1
 `-- tests
-    |-- Cargo.toml
-    |-- fixtures
-    |   `-- nbk_official_page_2026_04_05.html
-    `-- src
-        |-- integration.rs
-        `-- lib.rs
 ```
 
 ## Docs
 
 - [`docs/price-conversions.md`](docs/price-conversions.md) explains fixed-point scale, supported rate conventions, and the reciprocal rounding rule used for `KZTE/USD`.
 - [`docs/github-ci-tests-prompt.md`](docs/github-ci-tests-prompt.md) contains the repository-specific prompt for generating GitHub Actions CI coverage.
+- [`docs/ui-design-prompt.md`](docs/ui-design-prompt.md) contains the product-specific UI brief for design or frontend exploration work.
 
 ## Feeds
 
@@ -226,8 +194,11 @@ The feeder computes `conf` from `base_confidence_bps` and widens it when:
 cargo build
 anchor build
 cargo test
+cargo test -p integration-tests -- --nocapture
 anchor test
 ```
+
+`Anchor.toml` maps `anchor test` to the `integration-tests` crate, so `cargo test -p integration-tests -- --nocapture` and `anchor test` exercise the same local `solana-program-test` path.
 
 If you want optional market TWAP support in the feeder:
 
@@ -237,7 +208,7 @@ cargo build -p kzte-feeder --features market-twap
 
 ## Example Runs
 
-Copy `config/cli.example.toml` to `config/cli.toml` and `config/feeder.example.toml` to `config/feeder.toml` before running the commands below. The checked-in examples are prefilled for the current devnet deployment and can be edited for a different environment.
+Both binaries default to `config/cli.example.toml` and `config/feeder.example.toml`. The repo also checks in `config/cli.toml` and `config/feeder.toml` with the current devnet addresses, so you can either rely on the defaults or point `--config` / `CLI_CONFIG_PATH` / `FEEDER_CONFIG_PATH` at the non-example files. Whichever pair you choose, keep the CLI and feeder pointed at the same deployment.
 
 One-shot feeder run:
 
@@ -260,8 +231,10 @@ cargo run -p kzte-cli -- --config config/cli.toml init \
   --hard-stale-seconds 259200 \
   --warn-deviation-bps 100 \
   --halt-deviation-bps 500 \
-  --publishers <PUBLISHER_PUBKEY>
+  --publishers <PUBLISHER_PUBKEY[,PUBLISHER_PUBKEY...]>
 ```
+
+`--halt-behavior` defaults to `store-halted`. Set `--halt-behavior reject` if you want updates beyond the halt threshold to be rejected instead of stored as `Halted`.
 
 Create the canonical feeds:
 
@@ -304,10 +277,9 @@ anchor keys sync
 
 4. Update:
    - `Anchor.toml`
-   - `.env`
-   - `config/feeder.toml`
-   - `config/cli.toml`
-   - deployment automation / secret manager
+   - either `config/feeder.example.toml` or `config/feeder.toml`
+   - either `config/cli.example.toml` or `config/cli.toml`
+   - your runtime env file / secret manager, if you use env overrides
 5. Build and deploy the program:
 
 ```bash
@@ -322,7 +294,15 @@ anchor deploy
 
 ## Environment Variables
 
-See `.env.example`. The important ones are:
+See `.env.example` for a full template. The binaries do not load `.env` automatically, so export variables in your shell or inject them through your process manager.
+
+Directly consumed from environment:
+
+- `CLI_CONFIG_PATH`
+- `FEEDER_CONFIG_PATH`
+- `RUST_LOG`
+
+Feeder config fields currently overridden from environment:
 
 - `SOLANA_RPC_URL`
 - `SOLANA_WS_URL`
@@ -333,10 +313,11 @@ See `.env.example`. The important ones are:
 - `KZTE_FEED_KZTE_KZT_PUBKEY`
 - `KZTE_FEED_KZTE_USD_PUBKEY`
 - `KZTE_FEED_KZTE_USDC_PUBKEY`
-- `KZTE_MINT`
 - `NBK_OFFICIAL_PAGE_URL`
-- `NBK_OPEN_DATA_*`
-- `MARKET_TWAP_*`
+- `NBK_OPEN_DATA_URL`
+- `MARKET_TWAP_URL`
+
+Source enable flags, JSON pointers, timeout values, policy knobs, metrics listen address, and `KZTE_MINT` remain TOML-driven today even though `.env.example` includes placeholders for them.
 
 ## Update Flow
 
@@ -396,7 +377,7 @@ Included tests cover:
 - deviation threshold classification
 - unauthorized signer rejection
 - replay rejection
-- `solana-program-test` integration flow used by `anchor test`
+- `solana-program-test` integration flow used by both `cargo test -p integration-tests -- --nocapture` and `anchor test`
 
 ## Switching Source Adapters
 
